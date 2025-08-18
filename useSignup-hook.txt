@@ -1,0 +1,49 @@
+"use client";
+import { useState } from "react";
+import { auth, db } from "@/config/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+
+export default function useSignup() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const signup = async (firstName, lastName, email, password) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Create user profile in Firestore
+      const userRef = doc(db, "users", user.uid);
+
+      await setDoc(userRef, {
+        id: user.uid,
+        firstName,
+        lastName,
+        email,
+        profileImage: "", // empty for now
+        token: 1500, // default
+        role: false, // false = normal user
+        favorites: [],
+        charactersCreated: [],
+        charactersBought: [],
+        earned: 0,
+        createdAt: serverTimestamp(),
+      });
+
+      setLoading(false);
+      return { success: true, uid: user.uid };
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError(err.message);
+      setLoading(false);
+      return { success: false, error: err.message };
+    }
+  };
+
+  return { signup, loading, error };
+}
