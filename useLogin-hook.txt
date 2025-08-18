@@ -1,0 +1,30 @@
+"use client";
+import { useState } from "react";
+import { auth } from "@/config/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+
+export default function useLogin() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const login = async (email, password) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Try signing in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      setLoading(false);
+      return { success: true, user };
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message);
+      setLoading(false);
+      return { success: false, error: err.message };
+    }
+  };
+
+  return { login, loading, error };
+}
