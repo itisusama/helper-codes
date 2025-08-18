@@ -16,3 +16,19 @@ export default function RootLayout({ children }) {
 
 import useSignup from "@/hooks/useSignup"
 import { toast } from "sonner"
+
+const onSubmit = async (data) => {
+    const res = await signup(
+      data.firstName,
+      data.lastName,
+      data.email,
+      data.password
+    )
+
+    if (res.success) {
+      toast.success("🎉 Account created successfully!")
+      reset()
+    } else {
+      toast.error(`❌ Signup failed: ${res.error}`)
+    }
+  }
