@@ -1,0 +1,85 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import useLogout from "@/hooks/useLogout"
+import { LayoutDashboard, User, Plus } from 'lucide-react';
+import Image from "next/image";
+import { assets } from "@/assets/assets";
+import { toast } from "sonner";
+
+export default function SidebarLayout({ children }) {
+  const pathname = usePathname();
+  const { logout, loading: logoutLoading } = useLogout();
+  const router = useRouter();
+  
+    const handleLogout = async () => {
+      const res = await logout()
+      if (res.success) {
+        toast.success("✅ Logged out successfully")
+        router.push("/")
+      } else {
+        toast.error(`❌ Logout failed: ${res.error}`)
+      }
+    }
+
+  const sidebarLinks = [
+    { name: "Dashboard", path: "/admin/dashboard", icon: <LayoutDashboard /> },
+    { name: "Users", path: "/admin/users", icon: <User /> },
+    { name: "Add Characters", path: "/admin/add-characters", icon: <Plus/> },
+  ];
+
+  return (
+    <>
+      {/* Top Navbar */}
+      <div className="flex items-center justify-between px-4 md:px-8 border-b border-gray-300 py-3 bg-white">
+        <Link  href="/" className="flex items-center gap-2">
+              <Image
+              src={assets.Logo}
+              alt="logo"
+              width={40}
+              height={40}
+              />
+              <h2 className="text-xl font-bold">Qissa Nagar</h2>
+        </Link>
+        <div className="flex items-center gap-5 text-gray-500">
+          <p>Hi! Admin</p>
+          <button
+           onClick={handleLogout}
+           disabled={logoutLoading}
+           className="border border-red-500 rounded-full text-red-500 px-4 py-1 cursor-pointer"
+           >
+            {logoutLoading ? "Logging out..." : "Logout"}
+           </button>
+        </div>
+      </div>
+
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <div className="md:w-64 w-16 border-r h-[calc(100vh-56px)] text-base border-gray-300 pt-4 flex flex-col transition-all duration-300">
+          {sidebarLinks.map((item, index) => {
+            const isActive = pathname.startsWith(item.path); // ✅ also works for sub-routes
+            return (
+              <Link
+                href={item.path}
+                key={index}
+                className={`flex items-center py-3 px-4 gap-3 transition-colors duration-200
+                  ${
+                    isActive
+                      ? "border-r-4 md:border-r-[6px] bg-indigo-500/10 border-indigo-500 text-indigo-500"
+                      : "hover:bg-gray-100/90 border-white text-gray-700"
+                  }`}
+              >
+                <span>{item.icon}</span>
+                <p className="md:block hidden text-center">{item.name}</p>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Page Content */}
+        <main className="flex-1 p-4">{children}</main>
+      </div>
+    </>
+  );
+}
