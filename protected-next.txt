@@ -1,0 +1,30 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import useUser from "@/hooks/useUser";
+import Loader from "./Loader";
+
+export default function ProtectedRoute({ children, adminOnly = false }) {
+  const { user, loading } = useUser();
+  const router = useRouter();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.replace("/login");
+      } else if (adminOnly && !user.role) {
+        router.replace("/"); // or "/unauthorized"
+      } else {
+        setChecked(true); // ✅ Passed checks
+      }
+    }
+  }, [user, loading, adminOnly, router]);
+
+  if (loading || !checked) {
+    return <Loader />;
+  }
+
+  return children;
+}
