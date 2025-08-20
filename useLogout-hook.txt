@@ -1,0 +1,27 @@
+"use client"
+import { useState } from "react"
+import { auth } from "@/config/firebase"
+import { signOut } from "firebase/auth"
+
+export default function useLogout() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const logout = async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      await signOut(auth)
+      setLoading(false)
+      return { success: true }
+    } catch (err) {
+      console.error("Logout error:", err)
+      setError(err.message)
+      setLoading(false)
+      return { success: false, error: err.message }
+    }
+  }
+
+  return { logout, loading, error }
+}
