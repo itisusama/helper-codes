@@ -1,0 +1,47 @@
+"use client"
+import { useEffect, useState } from "react"
+import { auth, db } from "@/config/firebase"
+import { onAuthStateChanged } from "firebase/auth"
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
+
+export default function useUser() {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userRef = doc(db, "users", firebaseUser.uid)
+        const userSnap = await getDoc(userRef)
+
+        if (userSnap.exists()) {
+          setUser(userSnap.data())
+        } else {
+          const newUser = {
+            id: firebaseUser.uid,
+            firstName: "",
+            lastName: "",
+            email: firebaseUser.email,
+            profileImage: "",
+            token: 1500,
+            role: false, // false = normal user
+            favorites: [],
+            charactersCreated: [],
+            charactersBought: [],
+            earned: 0,
+            createdAt: serverTimestamp(),
+          }
+          await setDoc(userRef, newUser)
+          setUser(newUser)
+        }
+      } else {
+        setUser(null)
+      }
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
+
+  return { user, loading }
+}
